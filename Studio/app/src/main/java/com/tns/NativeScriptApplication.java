@@ -12,7 +12,6 @@ import com.tns.internal.AppBuilderCallback;
 import com.tns.internal.DefaultExtractPolicy;
 import com.tns.internal.ExtractPolicy;
 
-
 public class NativeScriptApplication extends android.app.Application implements com.tns.NativeScriptHashCodeProvider {
 	public static class ActivityLifecycleCallbacks implements android.app.Application.ActivityLifecycleCallbacks, com.tns.NativeScriptHashCodeProvider {
 
@@ -708,13 +707,9 @@ public class NativeScriptApplication extends android.app.Application implements 
 	}
 	
 	public void onCreate() {
-
-		try {
-			Thread.sleep(15000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
+		
+		System.loadLibrary("NativeScript");
+		
 		Logger logger = new LogcatLogger(BuildConfig.DEBUG, this);
 		
 		boolean showErrorIntent = hasErrorIntent();
@@ -725,7 +720,9 @@ public class NativeScriptApplication extends android.app.Application implements 
 			prepareAppBuilderCallbackImpl(logger);
 			
 			// TODO: refactor
-			ExtractPolicy extractPolicy = new DefaultExtractPolicy(logger);
+			ExtractPolicy extractPolicy = (appBuilderCallbackImpl != null)
+					? appBuilderCallbackImpl.getExtractPolicy()
+					: new DefaultExtractPolicy(logger);
 			boolean skipAssetExtraction = Util.runPlugin(logger, this);
 			if (!skipAssetExtraction)
 			{
@@ -736,8 +733,20 @@ public class NativeScriptApplication extends android.app.Application implements 
 			{
 				appBuilderCallbackImpl.onCreate(this);
 			}
-			
-			NativeScriptSyncHelper.sync(logger, this);
+
+			if (NativeScriptSyncService.isSyncEnabled(this))
+			{
+                NativeScriptSyncService syncService = new NativeScriptSyncService(logger, this);
+                syncService.sync();
+                syncService.startServer();
+			}
+			else
+			{
+				if (logger.isEnabled())
+				{
+					logger.write("NativeScript LiveSync is not enabled.");
+				}
+			}
 
 			String appName = this.getPackageName();
 			File rootDir = new File(this.getApplicationInfo().dataDir);
@@ -770,14 +779,9 @@ public class NativeScriptApplication extends android.app.Application implements 
 	{
 		Class<?> appBuilderCallbackClass = null;
 		
-		String packageName = super.getPackageName();
-
-		String className = packageName.equals("com.tns")
-									? "com.tns.internal.AppBuilderCallbackTestImpl"
-									: "com.tns.internal.AppBuilderCallbackImpl";
-
 		try
 		{
+			String className = "com.tns.internal.AppBuilderCallbackImpl";
 			appBuilderCallbackClass = Class.forName(className);
 		}
 		catch (ClassNotFoundException e)

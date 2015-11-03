@@ -4,14 +4,14 @@ import android.util.Log;
 
 public class DummyClass
 {
-	private static class DummyClassImpl extends com.tns.tests.DummyClass
+	private static class DummyClassImpl extends DummyClass
 	{
 	}
 	
-	public static class DummyDerivedClass extends com.tns.tests.DummyClass
+	public static class DummyDerivedClass extends DummyClass
 	{
 		@Override
-		public String dummyMethod(com.tns.tests.DummyClass dummy)
+		public String dummyMethod(DummyClass dummy)
 		{
 			return super.dummyMethod(dummy);
 		}
@@ -66,7 +66,7 @@ public class DummyClass
 		return dummyMethod(new DummyClassImpl());
 	}
 	
-	public String dummyMethod(com.tns.tests.DummyClass dummy)
+	public String dummyMethod(DummyClass dummy)
 	{
 		return dummy.nameField;
 	}

@@ -4,6 +4,6 @@ public class MyClassBase
 {
 	public static String getName()
 	{
-		return com.tns.tests.MyClassBase.class.getName();
+		return MyClassBase.class.getName();
 	}
 }

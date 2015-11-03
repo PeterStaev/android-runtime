@@ -1,24 +1,24 @@
 __disableVerboseLogging();
 __log("starting tests");
-require("./tests/testWeakRef"); 
-require("./tests/tests");
-require("./tests/testMethodResolution");
-require("./tests/testArrays");
-require("./tests/testsForRuntimeBindingGenerator");
-require("./tests/testPrimitiveTypeConversion");
-require("./tests/numericConversionTests"); 
-require("./tests/inheritanceChainResolutionTest"); 
-require("./tests/exceptionHandlingTests");
-require("./tests/dispatchCallbacksOnUiThreadTests");
-require("./tests/stringConversionTests");
-require("./tests/testsForTypescript"); 
-require("./tests/testGC");
-require("./tests/testsMemoryManagement");
-require("./tests/testIfAbleToRunExternalFile");
-require("./tests/testFieldGetSet");
-require("./tests/extendedClassesTests");
-require("./tests/extendClassNameTests");
-require("./tests/testJniReferenceLeak");
+//require("./tests/testWeakRef");
+//require("./tests/tests");
+//require("./tests/testMethodResolution");
+//require("./tests/testArrays");
+//require("./tests/testsForRuntimeBindingGenerator");
+//require("./tests/testPrimitiveTypeConversion");
+//require("./tests/numericConversionTests");
+//require("./tests/inheritanceChainResolutionTest");
+//require("./tests/exceptionHandlingTests");
+//require("./tests/dispatchCallbacksOnUiThreadTests");
+//require("./tests/stringConversionTests");
+//require("./tests/testsForTypescript");
+//require("./tests/testGC");
+//require("./tests/testsMemoryManagement");
+//require("./tests/testIfAbleToRunExternalFile");
+//require("./tests/testFieldGetSet");
+//require("./tests/extendedClassesTests");
+//require("./tests/extendClassNameTests");
+//require("./tests/testJniReferenceLeak");
 
 var MainActivity = {
     onCreate: function (bundle) {
@@ -64,5 +64,11 @@ app.init({
 	
 	onCreate: function() {
 		__log("Application on create called");
-	} 
+	},
+
+	onLiveSync: function() {
+    	__enableVerboseLogging();
+    	__log("LiveSync called");
+    	__disableVerboseLogging();
+    }
 });

@@ -2,53 +2,53 @@
 <items version="2" >
 
     <item
-        jar="C:\Work\nativescript\android-runtime\Studio\app\build\intermediates\exploded-aar\com.android.support\support-v4\23.0.1\jars\classes.jar"
-        jumboMode="false"
-        revision="23.0.0"
-        sha1="c31e21b53ff2f74664e498248d01453a32e32d48">
-        <dex dex="C:\Work\nativescript\android-runtime\Studio\app\build\intermediates\pre-dexed\arm7\debug\classes-9333f855bb69a4a7d1868b4fbab3ef17d8cc32e1.jar" />
-    </item>
-    <item
-        jar="C:\Work\nativescript\android-runtime\Studio\app\build\intermediates\exploded-aar\Studio\binding-generator\unspecified\jars\libs\asm-commons-5.0.3.jar"
-        jumboMode="false"
-        revision="23.0.0"
-        sha1="a7111830132c7f87d08fe48cb0ca07630f8cb91c">
-        <dex dex="C:\Work\nativescript\android-runtime\Studio\app\build\intermediates\pre-dexed\arm7\debug\asm-commons-5.0.3-aef34e9e6f0d378ce00a6eed0cfc021252f58d79.jar" />
-    </item>
-    <item
-        jar="C:\Work\nativescript\android-runtime\Studio\app\build\intermediates\exploded-aar\com.android.support\appcompat-v7\23.0.1\jars\classes.jar"
+        jar="C:\Work\nativescript-hack\livesync-server\android-runtime\Studio\app\build\intermediates\exploded-aar\com.android.support\appcompat-v7\23.0.1\jars\classes.jar"
         jumboMode="false"
         revision="23.0.0"
         sha1="d86429b0f0b3f3cafbeb78dda1b9d89119ccb05d">
-        <dex dex="C:\Work\nativescript\android-runtime\Studio\app\build\intermediates\pre-dexed\arm7\debug\classes-44d277dbe41aabc1d1a28cd7eaabf636974aa90b.jar" />
-    </item>
-    <item
-        jar="C:\Work\nativescript\android-runtime\Studio\app\build\intermediates\exploded-aar\Studio\binding-generator\unspecified\jars\libs\asm-5.0.3.jar"
-        jumboMode="false"
-        revision="23.0.0"
-        sha1="dcc2193db20e19e1feca8b1240dbbc4e190824fa">
-        <dex dex="C:\Work\nativescript\android-runtime\Studio\app\build\intermediates\pre-dexed\arm7\debug\asm-5.0.3-36aa3de80ba23ae92f37275a7607f7b2274cdb9c.jar" />
-    </item>
-    <item
-        jar="C:\Work\nativescript\android-runtime\Studio\app\build\intermediates\exploded-aar\Studio\binding-generator\unspecified\jars\classes.jar"
-        jumboMode="false"
-        revision="23.0.0"
-        sha1="6a9c8b67f3274808a2b9f1c85f65b384a27269fe">
-        <dex dex="C:\Work\nativescript\android-runtime\Studio\app\build\intermediates\pre-dexed\arm7\debug\classes-268593deef1ddb5553b078bd652189ad379b4c6d.jar" />
-    </item>
-    <item
-        jar="C:\Work\nativescript\android-runtime\Studio\app\build\intermediates\exploded-aar\com.android.support\support-v4\23.0.1\jars\libs\internal_impl-23.0.1.jar"
-        jumboMode="false"
-        revision="23.0.0"
-        sha1="aa92916125166649d8ad4ba3940c3dd7515596d3">
-        <dex dex="C:\Work\nativescript\android-runtime\Studio\app\build\intermediates\pre-dexed\arm7\debug\internal_impl-23.0.1-f1732e16dcc4606cfff9e8c4f87ec3c1735003c2.jar" />
+        <dex dex="C:\Work\nativescript-hack\livesync-server\android-runtime\Studio\app\build\intermediates\pre-dexed\arm7\debug\classes-e2351b32420742d4a4f45d91d77047be76296077.jar" />
     </item>
     <item
         jar="D:\adt-bundle-windows-x86_64-20140702\sdk\extras\android\m2repository\com\android\support\support-annotations\23.0.1\support-annotations-23.0.1.jar"
         jumboMode="false"
         revision="23.0.0"
         sha1="1fce89a6428c51467090d7f424e4c9c3dbd55f7e">
-        <dex dex="C:\Work\nativescript\android-runtime\Studio\app\build\intermediates\pre-dexed\arm7\debug\support-annotations-23.0.1-c80a847b1684fd6646121455b3635ca07813fa2f.jar" />
+        <dex dex="C:\Work\nativescript-hack\livesync-server\android-runtime\Studio\app\build\intermediates\pre-dexed\arm7\debug\support-annotations-23.0.1-c80a847b1684fd6646121455b3635ca07813fa2f.jar" />
+    </item>
+    <item
+        jar="C:\Work\nativescript-hack\livesync-server\android-runtime\Studio\app\build\intermediates\exploded-aar\com.android.support\support-v4\23.0.1\jars\libs\internal_impl-23.0.1.jar"
+        jumboMode="false"
+        revision="23.0.0"
+        sha1="aa92916125166649d8ad4ba3940c3dd7515596d3">
+        <dex dex="C:\Work\nativescript-hack\livesync-server\android-runtime\Studio\app\build\intermediates\pre-dexed\arm7\debug\internal_impl-23.0.1-9999f994ee150e02b1cc18c478832ca3d2b52353.jar" />
+    </item>
+    <item
+        jar="C:\Work\nativescript-hack\livesync-server\android-runtime\Studio\app\build\intermediates\exploded-aar\com.android.support\support-v4\23.0.1\jars\classes.jar"
+        jumboMode="false"
+        revision="23.0.0"
+        sha1="c31e21b53ff2f74664e498248d01453a32e32d48">
+        <dex dex="C:\Work\nativescript-hack\livesync-server\android-runtime\Studio\app\build\intermediates\pre-dexed\arm7\debug\classes-8edca39d8728656c0302c572092210918aab5b94.jar" />
+    </item>
+    <item
+        jar="C:\Work\nativescript-hack\livesync-server\android-runtime\Studio\app\build\intermediates\exploded-aar\Studio\binding-generator\unspecified\jars\libs\asm-commons-5.0.3.jar"
+        jumboMode="false"
+        revision="23.0.0"
+        sha1="a7111830132c7f87d08fe48cb0ca07630f8cb91c">
+        <dex dex="C:\Work\nativescript-hack\livesync-server\android-runtime\Studio\app\build\intermediates\pre-dexed\arm7\debug\asm-commons-5.0.3-c807426ca7b94795499357f6f86d18307ee9412e.jar" />
+    </item>
+    <item
+        jar="C:\Work\nativescript-hack\livesync-server\android-runtime\Studio\app\build\intermediates\exploded-aar\Studio\binding-generator\unspecified\jars\libs\asm-5.0.3.jar"
+        jumboMode="false"
+        revision="23.0.0"
+        sha1="dcc2193db20e19e1feca8b1240dbbc4e190824fa">
+        <dex dex="C:\Work\nativescript-hack\livesync-server\android-runtime\Studio\app\build\intermediates\pre-dexed\arm7\debug\asm-5.0.3-1a89c9f6d526fe0ba6f3f3aebf96e100cb99e7db.jar" />
+    </item>
+    <item
+        jar="C:\Work\nativescript-hack\livesync-server\android-runtime\Studio\app\build\intermediates\exploded-aar\Studio\binding-generator\unspecified\jars\classes.jar"
+        jumboMode="false"
+        revision="23.0.0"
+        sha1="bda82fa0316b7a1a81d85cb7f8e27e4001f2aa35">
+        <dex dex="C:\Work\nativescript-hack\livesync-server\android-runtime\Studio\app\build\intermediates\pre-dexed\arm7\debug\classes-cbfcb3244e7c6a525af9ddb96bb9981f76e16cc4.jar" />
     </item>
 
 </items>

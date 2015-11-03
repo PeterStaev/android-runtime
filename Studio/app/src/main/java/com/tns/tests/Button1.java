@@ -36,7 +36,7 @@ public class Button1 extends ButtonBase
 		{
 			Log.d(logTag, "InnerButton ctor(String:" + s + ") called");
 		}
-
+		
 		public InnerButton(int i)
 		{
 			Log.d(logTag, "InnerButton ctor(int:" + i + ") called");
@@ -72,38 +72,38 @@ public class Button1 extends ButtonBase
 	private String IMAGE_ID_PROP = "image id prop";
 
 	private boolean IMAGE_ID_BOOL_PROP = false;
-
+	
 	public String GetStaticImageId()
 	{
 		return STATIC_IMAGE_ID;
 	}
-
+	
 	public static String SGetStaticImageId()
 	{
 		return STATIC_IMAGE_ID;
 	}
-
+	
 	public Button1()
 	{
 		Log.d(logTag, "Button instance created from javascript");
 	}
-
+	
 	public Button1(int value)
 	{
 		Log.d(logTag, "Button instance created from javascript with number " + value);
 	}
-
+	
 	public String echo(String s) throws Throwable
 	{
 		return s;
 	}
-
+	
 	public String triggerEcho(String s) throws Throwable
 	{
 		String ret = echo(s);
 		return ret;
 	}
-
+	
 	public Object triggerEchoAsObject(String s) throws Throwable
 	{
 		String ret = echo(s);
@@ -120,7 +120,7 @@ public class Button1 extends ButtonBase
 		Log.d(logTag, "Button: setLabel called text:" + text);
 	}
 
-	public void setOnClickListener(OnClickListener l)
+	public void setOnClickListener(android.view.View.OnClickListener l)
 	{
 		mOnClickListener = l;
 		if (l instanceof OnClickListener)
@@ -190,17 +190,17 @@ public class Button1 extends ButtonBase
 	{
 		Log.d(logTag, "method1(byte): " + value);
 	}
-
+	
 	public String method2(int value)
 	{
 		return "int=" + value;
 	}
-
+	
 	public String callMethod2WithInt()
 	{
 		return method2((int)1);
 	}
-
+	
 	public String callMethod2WithByte()
 	{
 		return method2((byte)5);
@@ -215,7 +215,7 @@ public class Button1 extends ButtonBase
 	{
 		return IMAGE_ID_PROP;
 	}
-
+	
 	public String getMeANullString()
 	{
 		return null;

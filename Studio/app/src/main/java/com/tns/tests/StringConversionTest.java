@@ -10,9 +10,9 @@ public class StringConversionTest
 {
 	public final String s;
 	
-	public StringConversionTest(Context context) throws Exception
+	public StringConversionTest() throws Exception
 	{
-		this.s = readString(context);
+		this.s = readString();
 	}
 	
 	public String getString()
@@ -80,12 +80,11 @@ public class StringConversionTest
 	{
 	}
 
-	private String readString(Context context) throws Exception
+	private String readString() throws Exception
 	{
 		String str = null;
 		
-		//Context context = com.tns.NativeScriptApplication.getInstance();
-        context = com.tns.NativeScriptApplication.getInstance();
+		Context context = com.tns.NativeScriptApplication.getInstance();
 		
 		InputStream inputStream = null;
 		try

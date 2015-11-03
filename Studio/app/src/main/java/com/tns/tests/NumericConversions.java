@@ -39,40 +39,40 @@ public class NumericConversions {
 	}
 	
 	//call long
-	public static long callHasToReturnLong(com.tns.tests.NumericConversions nc, long value)
+	public static long callHasToReturnLong(NumericConversions nc, long value)
 	{
 		long ret = nc.hasToReturnLong(value);
 		return ret;
 	}
 	
-	public static long callHasToReturnLong(com.tns.tests.NumericConversions nc, int value)
+	public static long callHasToReturnLong(NumericConversions nc, int value)
 	{
 		long ret = nc.hasToReturnLong(value);
 		return ret;
 	}
 	
 	//call int
-	public static int callHasToReturnInt(com.tns.tests.NumericConversions nc, long value)
+	public static int callHasToReturnInt(NumericConversions nc, long value)
 	{
 		int ret = nc.hasToReturnInt(value);
 		return ret;
 	}
 	
 	//should blow up
-	public static int callHasToReturnInt(com.tns.tests.NumericConversions nc, int value)
+	public static int callHasToReturnInt(NumericConversions nc, int value)
 	{
 		int ret = nc.hasToReturnInt(value);
 		return ret;
 	}
 	
 	//call double
-	public static double callHasToReturnDouble(com.tns.tests.NumericConversions nc, double value)
+	public static double callHasToReturnDouble(NumericConversions nc, double value)
 	{
 		double ret = nc.hasToReturnDouble(value);
 		return ret;
 	}
 	
-	public static double callHasToReturnDouble(com.tns.tests.NumericConversions nc, float value)
+	public static double callHasToReturnDouble(NumericConversions nc, float value)
 	{
 		double ret = nc.hasToReturnDouble(value);
 		return ret;
@@ -80,13 +80,13 @@ public class NumericConversions {
 	
 	//call float
 	//should blow up
-	public static float callHasToReturnFloat(com.tns.tests.NumericConversions nc, double value)
+	public static float callHasToReturnFloat(NumericConversions nc, double value)
 	{
 		float ret = nc.hasToReturnFloat(value);
 		return ret;
 	}
 	
-	public static float callHasToReturnFloat(com.tns.tests.NumericConversions nc, float value)
+	public static float callHasToReturnFloat(NumericConversions nc, float value)
 	{
 		float ret = nc.hasToReturnFloat(value);
 		return ret;
