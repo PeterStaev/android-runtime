@@ -221,20 +221,20 @@ public class DexFactory
 			classToProxyFile += "-" + this.dexThumb;
 		}
 
-		String dexFilePath = dexDir + classToProxyFile + ".dex";
-		File dexFile = new File(dexFilePath);
-		if (dexFile.exists())
+		File dexFile = new File(dexDir, classToProxyFile + ".dex");
+		boolean existsDexFile = dexFile.exists();
+		if (existsDexFile)
 		{
 			if (logger.isEnabled())
 			{
-				logger.write("Looking for proxy file: " + dexFilePath + " Result: proxy file Found. ClassName: " + className);
+				logger.write("Looking for proxy file: " + dexFile.getAbsolutePath() + " Result: proxy file Found. ClassName: " + className);
 			}
 			return dexFile;
 		}
 
 		if (logger.isEnabled())
 		{
-			logger.write("Looking for proxy file: " + dexFilePath + " Result: NOT Found. Proxy Gen needed. ClassName: " + className);
+			logger.write("Looking for proxy file: " + dexFile.getAbsolutePath() + " Result: NOT Found. Proxy Gen needed. ClassName: " + className);
 		}
 		return null;
 	}
