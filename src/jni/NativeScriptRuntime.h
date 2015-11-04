@@ -90,7 +90,7 @@ namespace tns
 
 		static void CreateTopLevelNamespaces(const v8::Local<v8::Object>& global);
 
-		static void CompileAndRun(std::string modulePath, bool& hasError, v8::Local<v8::Object>& moduleObj);
+		static void CompileAndRun(std::string modulePath, bool& hasError, v8::Local<v8::Object>& moduleObj, std::string ambientName);
 
 		static v8::Local<v8::Object> FindClass(const std::string& className);
 
@@ -99,6 +99,10 @@ namespace tns
 		static jclass PlatformClass;
 
 		static jclass RequireClass;
+
+		static jclass AutoCloseableInterface;
+
+		static jclass ProfileClass;
 
 		static jclass JAVA_LANG_STRING;
 
@@ -127,6 +131,10 @@ namespace tns
 
 		static jmethodID GET_MODULE_PATH_METHOD_ID;
 
+		static jmethodID PROFILE_BLOCK_METHOD_ID;
+
+		static jmethodID AUTOCLOSABLE_CLOSE_METHOD_ID;
+
 		static jmethodID GET_TYPE_METADATA;
 
 		static jmethodID ENABLE_VERBOSE_LOGGING_METHOD_ID;
@@ -136,6 +144,7 @@ namespace tns
 		static jmethodID GET_CHANGE_IN_BYTES_OF_USED_MEMORY_METHOD_ID;
 
 		static std::map<std::string, v8::Persistent<v8::Object>*> loadedModules;
+		static std::map<std::string, v8::Persistent<v8::Object>*> ambientModulesCache;
 
 		static NumericCasts castFunctions;
 

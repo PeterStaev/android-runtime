@@ -202,7 +202,7 @@ extern "C" void Java_com_tns_Platform_runNativeScript(JNIEnv *_env, jobject obj,
 	string filePath = ArgConverter::jstringToString(scriptFile);
 	bool hasError = false;
 
-	NativeScriptRuntime::CompileAndRun(filePath, hasError, moduleObject);
+	NativeScriptRuntime::CompileAndRun(filePath, hasError, moduleObject, "");
 
 	/*
 	 * moduleObject (export module) can be set to js variable but currently we start the script implicitly without returning the moduleObject (just calling it)

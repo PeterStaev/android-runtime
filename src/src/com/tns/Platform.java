@@ -15,13 +15,15 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-
 import org.json.JSONObject;
+import java.lang.AutoCloseable;
 
 import android.util.SparseArray;
 
 import com.tns.bindings.ProxyGenerator;
 import com.tns.internal.ExtractPolicy;
+
+import android.util.Log;
 
 public class Platform
 {
@@ -97,55 +99,65 @@ public class Platform
 		errorActivityClass = clazz;
 	}
 	
-	public static int init(ThreadScheduler threadScheduler, Logger logger, String appName, File runtimeLibPath, File rootDir, File appDir, File debuggerSetupDir, ClassLoader classLoader, File dexDir, String dexThumb) throws RuntimeException
+	public static int init(ThreadScheduler threadScheduler, Logger logger, String appName, File runtimeLibPath, File rootDir, File appDir, File debuggerSetupDir, ClassLoader classLoader, File dexDir, String dexThumb) throws Exception
 	{
 		return init(null, threadScheduler, logger, appName, runtimeLibPath, rootDir, appDir, debuggerSetupDir, classLoader, dexDir, dexThumb);
 	}
-	
-	public static int init(Object application, ThreadScheduler threadScheduler, Logger logger, String appName, File runtimeLibPath, File rootDir, File appDir, File debuggerSetupDir, ClassLoader classLoader, File dexDir, String dexThumb) throws RuntimeException
+
+
+	public static int init(Object application, ThreadScheduler threadScheduler, Logger logger, String appName, File runtimeLibPath, File rootDir, File appDir, File debuggerSetupDir, ClassLoader classLoader, File dexDir, String dexThumb) throws Exception
 	{
-		if (initialized)
-		{
+		if (initialized) {
 			throw new RuntimeException("NativeScriptApplication already initialized");
 		}
-		
-		Platform.threadScheduler = threadScheduler;
-		
-		Platform.logger = logger;
-		
-		Platform.dexFactory = new DexFactory(logger, classLoader, dexDir, dexThumb);
 
 		int appJavaObjectId = -1;
-		if (application != null)
-		{
-			if (logger.isEnabled()) logger.write("Initializing NativeScript JAVA");
-			appJavaObjectId = generateNewObjectId();
-			makeInstanceStrong(application, appJavaObjectId);
-			if (logger.isEnabled()) logger.write("Initialized app instance id:" + appJavaObjectId);
+
+		Platform.threadScheduler = threadScheduler;
+		Platform.logger = logger;
+
+		try (AutoCloseable init2 = Profile.block("DaxFactory")) {
+			Platform.dexFactory = new DexFactory(logger, classLoader, dexDir, dexThumb);
 		}
 
-		try
-		{
-			Require.init(logger, rootDir, appDir);
+		try (AutoCloseable init2 = Profile.block("JAVA")) {
+			if (application != null) {
+				if (logger.isEnabled()) logger.write("Initializing NativeScript JAVA");
+				appJavaObjectId = generateNewObjectId();
+				makeInstanceStrong(application, appJavaObjectId);
+				if (logger.isEnabled())
+					logger.write("Initialized app instance id:" + appJavaObjectId);
+			}
 		}
-		catch (IOException ex)
-		{
-			throw new RuntimeException("Fail to initialize Require class", ex);
+
+		try (AutoCloseable init2 = Profile.block("require")) {
+			try {
+				Require.init(logger, rootDir, appDir);
+			} catch (IOException ex) {
+				throw new RuntimeException("Fail to initialize Require class", ex);
+			}
 		}
-		String jsOptions = readJsOptions(appDir);
-		Platform.initNativeScript(Require.getApplicationFilesPath(), appJavaObjectId, logger.isEnabled(), appName, jsOptions);
-		
-		if (debuggerSetupDir != null)
-		{
-			jsDebugger = new JsDebugger(logger, threadScheduler, debuggerSetupDir);
-											//also runs javaServerThread with resolved port
-			int debuggerPort = jsDebugger.getDebuggerPortFromEnvironment();
-			if (logger.isEnabled()) logger.write("port=" + debuggerPort);
+
+		String jsOptions;
+		try (AutoCloseable init2 = Profile.block("options")) {
+			jsOptions = readJsOptions(appDir);
 		}
-		
+
+		try (AutoCloseable init2 = Profile.block("NativeScript")) {
+			Platform.initNativeScript(Require.getApplicationFilesPath(), appJavaObjectId, logger.isEnabled(), appName, jsOptions);
+		}
+
+		try (AutoCloseable init2 = Profile.block("debugger")){
+			if (debuggerSetupDir != null) {
+				jsDebugger = new JsDebugger(logger, threadScheduler, debuggerSetupDir);
+				//also runs javaServerThread with resolved port
+				int debuggerPort = jsDebugger.getDebuggerPortFromEnvironment();
+				if (logger.isEnabled()) logger.write("port=" + debuggerPort);
+			}
+		}
+
 		//
-		if (logger.isEnabled())
-		{
+		if (logger.isEnabled()) {
 			Date d = new Date();
 			int pid = android.os.Process.myPid();
 			File f = new File("/proc/" + pid);
@@ -155,6 +167,7 @@ public class Platform
 		//
 
 		initialized = true;
+
 		return appJavaObjectId;
 	}
 	
@@ -248,48 +261,48 @@ public class Platform
 	@RuntimeCallable
 	private static Object createInstance(Object[] args, int objectId, int constructorId) throws InstantiationException, IllegalAccessException, ClassNotFoundException, NoSuchMethodException, IllegalArgumentException, InvocationTargetException, IOException
 	{
-		Constructor<?> ctor = ctorCache.get(constructorId);
-		boolean success = MethodResolver.convertConstructorArgs(ctor, args);
+		//try {
+			Constructor<?> ctor = ctorCache.get(constructorId);
+			//try (AutoCloseable jsCallBlock = Profile.block("new", "instantiate: " + ctor.getName())) {
 
-		if (!success)
-		{
-			StringBuilder builder = new StringBuilder();
-			builder.append(constructorId + "(");
-			if (args != null)
-			{
-				for (Object arg : args)
-				{
-					if (arg != null)
-					{
-						builder.append(arg.toString() + ", ");
+				boolean success = MethodResolver.convertConstructorArgs(ctor, args);
+
+				if (!success) {
+					StringBuilder builder = new StringBuilder();
+					builder.append(constructorId + "(");
+					if (args != null) {
+						for (Object arg : args) {
+							if (arg != null) {
+								builder.append(arg.toString() + ", ");
+							} else {
+								builder.append("null, ");
+							}
+						}
 					}
-					else
-					{
-						builder.append("null, ");
-					}
+					builder.append(")");
+
+					throw new InstantiationException("MethodResolver didn't resolve any constructor with the specified arguments " + builder.toString());
 				}
-			}
-			builder.append(")");
 
-			throw new InstantiationException("MethodResolver didn't resolve any constructor with the specified arguments " + builder.toString());
-		}
+				Object instance;
+				try {
+					Platform.currentObjectId = objectId;
+					instance = ctor.newInstance(args);
 
-		Object instance;
-		try
-		{
-			Platform.currentObjectId = objectId;
-			instance = ctor.newInstance(args);
+					makeInstanceStrong(instance, objectId);
+				} finally {
+					Platform.currentObjectId = -1;
+				}
 
-			makeInstanceStrong(instance, objectId);
-		}
-		finally
-		{
-			Platform.currentObjectId = -1;
-		}
-		
-		adjustAmountOfExternalAllocatedMemory();
-		
-		return instance;
+				adjustAmountOfExternalAllocatedMemory();
+
+				return instance;
+//			}
+//		} catch (Exception e) {
+//			Log.i("TNS", "Error calling JS method");
+//		}
+//
+//		return null;
 	}
 	
 	@RuntimeCallable
@@ -330,7 +343,7 @@ public class Platform
 		makeInstanceStrong(instance, javaObjectID);
 
 		String className = instance.getClass().getName();
-				
+
 		createJSInstanceNative(instance, javaObjectID, className);
 
 		if (logger.isEnabled()) logger.write("JSInstance for " + instance.getClass().toString() + " created with overrides");
@@ -576,7 +589,7 @@ public class Platform
 			{
 				isReleased = 1;
 			}
-			
+
 			output.putInt(isReleased);
 		}
 	}
@@ -774,74 +787,64 @@ public class Platform
 
 	private static Object dispatchCallJSMethodNative(final int javaObjectID, final String methodName, boolean isConstructor, long delay, Class<?> retType, final Object[] args) throws NativeScriptException
 	{
-		final int returnType = TypeIDs.GetObjectTypeId(retType);
 		Object ret = null;
-		
-		boolean isWorkThread = threadScheduler.getThread().equals(Thread.currentThread());
-		
-		final Object[] tmpArgs = extendConstructorArgs(methodName, isConstructor, args);
 
-		if (isWorkThread)
-		{
-			Object[] packagedArgs = packageArgs(tmpArgs);
-			ret = callJSMethodNative(javaObjectID, methodName, returnType, isConstructor, packagedArgs);
-		}
-		else
-		{
-			final Object[] arr = new Object[2];
-			
-			final boolean isCtor = isConstructor; 
-			Runnable r = new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					synchronized (this)
-					{
-						try
-						{
-							final Object[] packagedArgs = packageArgs(tmpArgs);
-							arr[0] = callJSMethodNative(javaObjectID, methodName, returnType, isCtor, packagedArgs);
+		try {
+			try (AutoCloseable jsCallBlock = Profile.block("javascript", "call: " + methodName)) {
+				final int returnType = TypeIDs.GetObjectTypeId(retType);
+
+				boolean isWorkThread = threadScheduler.getThread().equals(Thread.currentThread());
+
+				final Object[] tmpArgs = extendConstructorArgs(methodName, isConstructor, args);
+
+				if (isWorkThread) {
+					Object[] packagedArgs = packageArgs(tmpArgs);
+					ret = callJSMethodNative(javaObjectID, methodName, returnType, isConstructor, packagedArgs);
+				} else {
+					final Object[] arr = new Object[2];
+
+					final boolean isCtor = isConstructor;
+					Runnable r = new Runnable() {
+						@Override
+						public void run() {
+							synchronized (this) {
+								try {
+									final Object[] packagedArgs = packageArgs(tmpArgs);
+									arr[0] = callJSMethodNative(javaObjectID, methodName, returnType, isCtor, packagedArgs);
+								} finally {
+									this.notify();
+									arr[1] = Boolean.TRUE;
+								}
+							}
 						}
-						finally
-						{
-							this.notify();
-							arr[1] = Boolean.TRUE;
-						}
-					}
-				}
-			};
-			
-			if (delay > 0)
-			{
-				try
-				{
-					Thread.sleep(delay);
-				}
-				catch (InterruptedException e) {}
-			}
+					};
 
-			boolean success = threadScheduler.post(r);
-
-			if (success)
-			{
-				synchronized (r)
-				{
-					try
-					{
-						if (arr[1] == null)
-						{
-							r.wait();
+					if (delay > 0) {
+						try {
+							Thread.sleep(delay);
+						} catch (InterruptedException e) {
 						}
 					}
-					catch (InterruptedException e)
-					{
-						ret = e;
+
+					boolean success = threadScheduler.post(r);
+
+					if (success) {
+						synchronized (r) {
+							try {
+								if (arr[1] == null) {
+									r.wait();
+								}
+							} catch (InterruptedException e) {
+								ret = e;
+							}
+						}
 					}
+
+					ret = arr[0];
 				}
 			}
-
-			ret = arr[0];
+		} catch (Exception e) {
+			Log.i("TNS", "Error calling JS method " + e.toString());
 		}
 
 		return ret;

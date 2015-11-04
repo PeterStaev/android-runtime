@@ -1,5 +1,8 @@
 package com.tns;
 
+import java.lang.AutoCloseable;
+import android.util.Log;
+
 public class NativeScriptActivity extends android.app.Activity
 {
 	private final int objectId;
@@ -1563,20 +1566,23 @@ public class NativeScriptActivity extends android.app.Activity
 
 	protected void onCreate(android.os.Bundle param_0)
 	{
-		Object[] packagesArgs = Platform.packageArgs(this);
-		String[] methodOverrides = getMethodOverrides(objectId, packagesArgs);
-		setMethodOverrides(methodOverrides);
-		
-		if (__ho109)
-		{
-			Object[] args = new Object[1];
-			args[0] = param_0;
-			com.tns.Platform.callJSMethod(this, "onCreate", void.class, args);
-			android.util.Log.d("NativeScriptActivity", "NativeScriptActivity.onCreate called");
-		}
-		else
-		{
-			super.onCreate(param_0);
+		try {
+			try (AutoCloseable create = Profile.block("TNSActivity-onCreate")) {
+				Object[] packagesArgs = Platform.packageArgs(this);
+				String[] methodOverrides = getMethodOverrides(objectId, packagesArgs);
+				setMethodOverrides(methodOverrides);
+
+				if (__ho109) {
+					Object[] args = new Object[1];
+					args[0] = param_0;
+					com.tns.Platform.callJSMethod(this, "onCreate", void.class, args);
+					android.util.Log.d("NativeScriptActivity", "NativeScriptActivity.onCreate called");
+				} else {
+					super.onCreate(param_0);
+				}
+			}
+		} catch(Exception e) {
+			Log.e("TNS", "Error running app", e);
 		}
 	}
 
@@ -1712,19 +1718,23 @@ public class NativeScriptActivity extends android.app.Activity
 
 	public android.view.View onCreateView(android.view.View param_0, java.lang.String param_1, android.content.Context param_2, android.util.AttributeSet param_3)
 	{
-		if (__ho118)
-		{
-			Object[] args = new Object[4];
-			args[0] = param_0;
-			args[1] = param_1;
-			args[2] = param_2;
-			args[3] = param_3;
-			return (android.view.View)com.tns.Platform.callJSMethod(this, "onCreateView", android.view.View.class, args);
+		try {
+			try (AutoCloseable create = Profile.block("TNSActivity-onCreateView")) {
+				if (__ho118) {
+					Object[] args = new Object[4];
+					args[0] = param_0;
+					args[1] = param_1;
+					args[2] = param_2;
+					args[3] = param_3;
+					return (android.view.View) com.tns.Platform.callJSMethod(this, "onCreateView", android.view.View.class, args);
+				} else {
+					return super.onCreateView(param_0, param_1, param_2, param_3);
+				}
+			}
+		} catch(Exception e) {
+			Log.e("TNS", "Error running app", e);
 		}
-		else
-		{
-			return super.onCreateView(param_0, param_1, param_2, param_3);
-		}
+		return null;
 	}
 
 	public android.view.View onCreateView(java.lang.String param_0, android.content.Context param_1, android.util.AttributeSet param_2)
@@ -2104,14 +2114,20 @@ public class NativeScriptActivity extends android.app.Activity
 
 	protected void onRestart()
 	{
-		if (__ho143)
-		{
-			Object[] args = null;
-			com.tns.Platform.callJSMethod(this, "onRestart", void.class, args);
-		}
-		else
-		{
-			super.onRestart();
+		try {
+			try (AutoCloseable create = Profile.block("TNSActivity-onRestart")) {
+				if (__ho143)
+				{
+					Object[] args = null;
+					com.tns.Platform.callJSMethod(this, "onRestart", void.class, args);
+				}
+				else
+				{
+					super.onRestart();
+				}
+			}
+		} catch(Exception e) {
+			Log.e("TNS", "Error running app", e);
 		}
 	}
 
@@ -2131,15 +2147,22 @@ public class NativeScriptActivity extends android.app.Activity
 
 	protected void onResume()
 	{
-		if (__ho145)
-		{
-			Object[] args = null;
-			com.tns.Platform.callJSMethod(this, "onResume", void.class, args);
+		try {
+			try (AutoCloseable create = Profile.block("TNSActivity-onResume")) {
+				if (__ho145)
+				{
+					Object[] args = null;
+					com.tns.Platform.callJSMethod(this, "onResume", void.class, args);
+				}
+				else
+				{
+					super.onResume();
+				}
+			}
+		} catch(Exception e) {
+			Log.e("TNS", "Error running app", e);
 		}
-		else
-		{
-			super.onResume();
-		}
+		Profile.onActivityResumeEnd();
 	}
 
 	public java.lang.Object onRetainNonConfigurationInstance()
@@ -2184,14 +2207,20 @@ public class NativeScriptActivity extends android.app.Activity
 
 	protected void onStart()
 	{
-		if (__ho149)
-		{
-			Object[] args = null;
-			com.tns.Platform.callJSMethod(this, "onStart", void.class, args);
-		}
-		else
-		{
-			super.onStart();
+		try {
+			try (AutoCloseable create = Profile.block("TNSActivity-onStart")) {
+				if (__ho149)
+				{
+					Object[] args = null;
+					com.tns.Platform.callJSMethod(this, "onStart", void.class, args);
+				}
+				else
+				{
+					super.onStart();
+				}
+			}
+		} catch(Exception e) {
+			Log.e("TNS", "Error running app", e);
 		}
 	}
 

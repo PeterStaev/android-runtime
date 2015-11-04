@@ -7,6 +7,7 @@ import java.util.HashMap;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.util.Log;
 
 class Require
 {
@@ -79,33 +80,40 @@ class Require
 	@RuntimeCallable
 	private static String getModulePath(String moduleName, String callingDirName)
 	{
-		// This method is called my the NativeScriptRuntime.cpp RequireCallback method.
-		// The currentModuleDir is the directory path of the calling module.
-		checkForExternalPath = true;
-		File file = findModuleFile(moduleName, callingDirName);
+		try {
+			try (AutoCloseable c1 = Profile.block("Require.getModulePath('" + moduleName + "')")) {
+				// This method is called my the NativeScriptRuntime.cpp RequireCallback method.
+				// The currentModuleDir is the directory path of the calling module.
+				checkForExternalPath = true;
+				File file = findModuleFile(moduleName, callingDirName);
 
-		if (file != null && file.exists())
-		{
-			File projectRootDir = new File(RootPackageDir);
-			if (checkForExternalPath && isFileExternal(file, projectRootDir))
-			{
+				if (file != null && file.exists())
+				{
+					File projectRootDir = new File(RootPackageDir);
+					if (checkForExternalPath && isFileExternal(file, projectRootDir))
+					{
+						if (logger.isEnabled())
+						{
+							logger.write("Module " + moduleName + " is on external path");
+						}
+						return "EXTERNAL_FILE_ERROR";
+					}
+					else
+					{
+						return file.getAbsolutePath();
+					}
+				}
+
+				// empty path will be handled by the NativeScriptRuntime.cpp and a JS error will be thrown
 				if (logger.isEnabled())
 				{
-					logger.write("Module " + moduleName + " is on external path");
+					logger.write("Module " + moduleName + " not found. required from directory " + callingDirName);
 				}
-				return "EXTERNAL_FILE_ERROR";
 			}
-			else
-			{
-				return file.getAbsolutePath();
-			}
+		} catch(Exception e) {
+			Log.e("TNS", "Error running app", e);
 		}
 
-		// empty path will be handled by the NativeScriptRuntime.cpp and a JS error will be thrown
-		if (logger.isEnabled())
-		{
-			logger.write("Module " + moduleName + " not found. required from directory " + callingDirName);
-		}
 		return "";
 	}
 
@@ -128,8 +136,9 @@ class Require
 	
 	private static File findModuleFile(String moduleName, String currentDirectory)
 	{
-		File directory = null;
 		File jsFile = null;
+		File directory = null;
+
 		boolean isJSFile = moduleName.endsWith(".js");
 
 		if (currentDirectory == null || currentDirectory.isEmpty())
@@ -163,7 +172,7 @@ class Require
 			String folderPath = directory.getAbsolutePath();
 			String cachedPath = folderAsModuleCache.get(folderPath);
 			boolean found = false;
-			
+
 			if(cachedPath == null) {
 				// Search for package.json or index.js
 				File packageFile = new File(directory.getPath() + "/package.json");
@@ -197,9 +206,9 @@ class Require
 					// search for index.js
 					jsFile = new File(directory.getPath() + "/index.js");
 				}
-				
+
 				// TODO: search for <folderName>.js ?
-				
+
 				if(jsFile != null) {
 					// cache the main file for later use
 					folderAsModuleCache.put(folderPath, jsFile.getAbsolutePath());

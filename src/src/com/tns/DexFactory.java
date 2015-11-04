@@ -20,6 +20,8 @@ import com.tns.bindings.ProxyGenerator;
 import dalvik.system.DexClassLoader;
 import dalvik.system.DexFile;
 
+import android.util.Log;
+
 public class DexFactory
 {
 	private static final char CLASS_NAME_LOCATION_SEPARATOR = '_';
@@ -64,100 +66,108 @@ public class DexFactory
 
 	public Class<?> resolveClass(String name, String className, String[] methodOverrides) throws ClassNotFoundException, IOException
 	{
-		if (className.contains("NativeScriptActivity"))
-		{
-			// Do not extend NativeScriptActivity - it is already extended
-			return NativeScriptActivity.class;
-		}
-
-		String fullClassName = className.replace("$", "_") + CLASS_NAME_LOCATION_SEPARATOR + name;
-
-		// try to get pre-generated binding classes
 		try {
-			Class<?> pregeneratedClass = classLoader.loadClass(fullClassName.replace("-", "_"));
-			
-			return pregeneratedClass;
-		}
-		catch (Exception e)
-		{
-		}
-		//
+			try (AutoCloseable create = Profile.block("dex", "Dex.resolveClass(" + className + ")")) {
 
-		Class<?> existingClass = this.injectedDexClasses.get(fullClassName);
-		if (existingClass != null)
-		{
-			return existingClass;
-		}
+				if (className.contains("NativeScriptActivity"))
+				{
+					// Do not extend NativeScriptActivity - it is already extended
+					return NativeScriptActivity.class;
+				}
 
-		String classToProxy = this.getClassToProxyName(className);
-		String dexFilePath = classToProxy + CLASS_NAME_LOCATION_SEPARATOR + name;
-		File dexFile = this.getDexFile(dexFilePath);
-		
-		//generate dex file
-		if (dexFile == null)
-		{
-			long startGenTime = System.nanoTime();
-			if (logger.isEnabled())
-			{
-				logger.write("generating proxy in place");
+				String fullClassName = className.replace("$", "_") + CLASS_NAME_LOCATION_SEPARATOR + name;
+
+				// try to get pre-generated binding classes
+				try {
+					Class<?> pregeneratedClass = classLoader.loadClass(fullClassName.replace("-", "_"));
+
+					return pregeneratedClass;
+				}
+				catch (Exception e)
+				{
+				}
+				//
+
+				Class<?> existingClass = this.injectedDexClasses.get(fullClassName);
+				if (existingClass != null)
+				{
+					return existingClass;
+				}
+
+				String classToProxy = this.getClassToProxyName(className);
+				String dexFilePath = classToProxy + CLASS_NAME_LOCATION_SEPARATOR + name;
+				File dexFile = this.getDexFile(dexFilePath);
+
+				//generate dex file
+				if (dexFile == null)
+				{
+					long startGenTime = System.nanoTime();
+					if (logger.isEnabled())
+					{
+						logger.write("generating proxy in place");
+					}
+
+					dexFilePath = this.generateDex(name, classToProxy, methodOverrides);
+					dexFile = new File(dexFilePath);
+					long stopGenTime = System.nanoTime();
+					totalGenTime += stopGenTime - startGenTime;
+					if (logger.isEnabled())
+					{
+						logger.write("Finished inplace gen took: " + (stopGenTime - startGenTime) / 1000000.0 + "ms");
+						logger.write("TotalGenTime:  " + totalGenTime / 1000000.0 + "ms");
+					}
+				}
+
+				//creates jar file from already generated dex file
+				String jarFilePath = dexFile.getPath().replace(".dex", ".jar");
+				File jarFile = new File(jarFilePath);
+
+				if (!jarFile.exists())
+				{
+					FileOutputStream jarFileStream = new FileOutputStream(jarFile);
+					ZipOutputStream out = new ZipOutputStream(jarFileStream);
+
+					out.putNextEntry(new ZipEntry("classes.dex"));
+					byte[] dexData = new byte[(int)dexFile.length()];
+					FileInputStream fi = new FileInputStream(dexFile);
+					fi.read(dexData, 0, dexData.length);
+					fi.close();
+
+					out.write(dexData);
+					out.closeEntry();
+					out.close();
+				}
+				//
+
+				Class<?> result = null;
+				DexFile df = null;
+				try
+				{
+					// use DexFile instead of DexClassLoader to allow class loading
+					// within the default class loader
+					// Note: According to the official documentation, DexFile should not
+					// be directly used.
+					// However, this is the only viable way to get our dynamic classes
+					// loaded within the system class loader
+					df = DexFile.loadDex(jarFilePath, new File(this.odexDir, fullClassName).getAbsolutePath(), 0);
+					result = df.loadClass(fullClassName, classLoader);
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+					// fall back to DexClassLoader
+					DexClassLoader dexClassLoader = new DexClassLoader(jarFilePath, this.odexDir.getAbsolutePath(), null, classLoader);
+					result = dexClassLoader.loadClass(fullClassName);
+				}
+
+				this.injectedDexClasses.put(fullClassName, result);
+
+				return result;
 			}
-
-			dexFilePath = this.generateDex(name, classToProxy, methodOverrides);
-			dexFile = new File(dexFilePath);
-			long stopGenTime = System.nanoTime();
-			totalGenTime += stopGenTime - startGenTime;
-			if (logger.isEnabled())
-			{
-				logger.write("Finished inplace gen took: " + (stopGenTime - startGenTime) / 1000000.0 + "ms");
-				logger.write("TotalGenTime:  " + totalGenTime / 1000000.0 + "ms");
-			}
+		} catch(Exception e) {
+			Log.e("TNS", "Error running app", e);
 		}
-
-		//creates jar file from already generated dex file
-		String jarFilePath = dexFile.getPath().replace(".dex", ".jar");
-		File jarFile = new File(jarFilePath);
-
-		if (!jarFile.exists())
-		{
-			FileOutputStream jarFileStream = new FileOutputStream(jarFile);
-			ZipOutputStream out = new ZipOutputStream(jarFileStream);
-			
-		    out.putNextEntry(new ZipEntry("classes.dex"));
-		    byte[] dexData = new byte[(int)dexFile.length()];
-		    FileInputStream fi = new FileInputStream(dexFile);
-		    fi.read(dexData, 0, dexData.length);
-		    fi.close();
-		    
-		    out.write(dexData);
-		    out.closeEntry();
-		    out.close();
-		}
-		//
-		
-		Class<?> result = null;
-		DexFile df = null;
-		try
-		{
-			// use DexFile instead of DexClassLoader to allow class loading
-			// within the default class loader
-			// Note: According to the official documentation, DexFile should not
-			// be directly used.
-			// However, this is the only viable way to get our dynamic classes
-			// loaded within the system class loader
-			df = DexFile.loadDex(jarFilePath, new File(this.odexDir, fullClassName).getAbsolutePath(), 0);
-			result = df.loadClass(fullClassName, classLoader);
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-			// fall back to DexClassLoader
-			DexClassLoader dexClassLoader = new DexClassLoader(jarFilePath, this.odexDir.getAbsolutePath(), null, classLoader);
-			result = dexClassLoader.loadClass(fullClassName);
-		}
-
-		this.injectedDexClasses.put(fullClassName, result);
-
-		return result;
+		return null;
 	}
 
 	public Class<?> findClass(String className) throws ClassNotFoundException

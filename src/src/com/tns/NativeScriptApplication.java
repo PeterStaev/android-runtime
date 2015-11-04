@@ -1,8 +1,11 @@
 package com.tns;
 
 import java.io.File;
+import java.lang.AutoCloseable;
+import java.lang.Exception;
 
 import android.app.Application;
+import android.app.ExpandableListActivity;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Handler;
 import android.os.Looper;
@@ -77,9 +80,9 @@ public class NativeScriptApplication extends android.app.Application implements 
 	}
 
 	static {
-		if (BuildConfig.DEBUG) {
-			android.os.Debug.waitForDebugger();
-		}
+//		if (BuildConfig.DEBUG) {
+//			android.os.Debug.waitForDebugger();
+//		}
 	}
 	
 	protected void attachBaseContext(android.content.Context param_0) {
@@ -707,59 +710,94 @@ public class NativeScriptApplication extends android.app.Application implements 
 	}
 	
 	public void onCreate() {
-		
-		System.loadLibrary("NativeScript");
-		
-		Logger logger = new LogcatLogger(BuildConfig.DEBUG, this);
-		
-		boolean showErrorIntent = hasErrorIntent();
-		if (!showErrorIntent)
-		{
-			appInstance = this;
-			
-			prepareAppBuilderCallbackImpl(logger);
-			
-			// TODO: refactor
-			ExtractPolicy extractPolicy = (appBuilderCallbackImpl != null)
-					? appBuilderCallbackImpl.getExtractPolicy()
-					: new DefaultExtractPolicy(logger);
-			boolean skipAssetExtraction = Util.runPlugin(logger, this);
-			if (!skipAssetExtraction)
-			{
-				new AssetExtractor(null, logger).extractAssets(this, extractPolicy);
-			}
-			
-			if (appBuilderCallbackImpl != null)
-			{
-				appBuilderCallbackImpl.onCreate(this);
-			}
-			
-			NativeScriptSyncHelper.sync(logger, this);
+		try {
+			Profile.onApplicationCreateStart();
+			try (AutoCloseable c1 = Profile.block("NSApp-onCreate")) {
 
-			String appName = this.getPackageName();
-			File rootDir = new File(this.getApplicationInfo().dataDir);
-			File appDir = this.getFilesDir();
-			File debuggerSetupDir = Util.isDebuggableApp(this)
-										? getExternalFilesDir(null)
-										: null;
-			ClassLoader classLoader = this.getClassLoader();
-			File dexDir = new File(rootDir, "code_cache/secondary-dexes");
-			String dexThumb = null;
-			try
-			{
-				dexThumb = Util.getDexThumb(this);
+				try (AutoCloseable c2 = Profile.block("loadLibrary NativeScript")) {
+					System.loadLibrary("NativeScript");
+				}
+
+				Logger logger;
+				try (AutoCloseable c2 = Profile.block("LogcatLogger")) {
+					logger = new LogcatLogger(BuildConfig.DEBUG, this);
+				}
+
+				boolean showErrorIntent = hasErrorIntent();
+				if (!showErrorIntent) {
+					appInstance = this;
+
+					try (AutoCloseable c3 = Profile.block("prepareAppBuilderCallbackImpl")) {
+						prepareAppBuilderCallbackImpl(logger);
+					}
+
+					try (AutoCloseable c3 = Profile.block("extractAssets")) {
+						// TODO: refactor
+						ExtractPolicy extractPolicy = (appBuilderCallbackImpl != null)
+								? appBuilderCallbackImpl.getExtractPolicy()
+								: new DefaultExtractPolicy(logger);
+						boolean skipAssetExtraction = Util.runPlugin(logger, this);
+						if (!skipAssetExtraction) {
+							new AssetExtractor(null, logger).extractAssets(this, extractPolicy);
+						}
+					}
+
+					if (appBuilderCallbackImpl != null) {
+						try (AutoCloseable c3 = Profile.block("AppBuilder-onCreate")) {
+							appBuilderCallbackImpl.onCreate(this);
+						}
+					}
+
+					try (AutoCloseable c3 = Profile.block("NativeScriptSyncHelper-sync")) {
+						NativeScriptSyncHelper.sync(logger, this);
+					}
+
+					String appName;
+					File rootDir;
+					File appDir;
+					File debuggerSetupDir;
+					ClassLoader classLoader;
+					File dexDir;
+					String dexThumb;
+					ThreadScheduler workThreadScheduler;
+
+					try (AutoCloseable c3 = Profile.block("prepare")) {
+						appName = this.getPackageName();
+						rootDir = new File(this.getApplicationInfo().dataDir);
+						appDir = this.getFilesDir();
+						debuggerSetupDir = Util.isDebuggableApp(this)
+								? getExternalFilesDir(null)
+								: null;
+						classLoader = this.getClassLoader();
+						dexDir = new File(rootDir, "code_cache/secondary-dexes");
+						dexThumb = null;
+						try {
+							dexThumb = Util.getDexThumb(this);
+						} catch (NameNotFoundException e) {
+							if (logger.isEnabled())
+								logger.write("Error while getting current proxy thumb");
+							e.printStackTrace();
+						}
+						workThreadScheduler = new WorkThreadScheduler(new Handler(Looper.getMainLooper()));
+					}
+
+					try (AutoCloseable init1 = Profile.block("Platform-init")) {
+						Platform.init(this, workThreadScheduler, logger, appName, null, rootDir, appDir, debuggerSetupDir, classLoader, dexDir, dexThumb);
+					}
+					try (AutoCloseable init1 = Profile.block("Platform-prepareExtend")) {
+						Platform.runScript(new File(appDir, "internal/prepareExtend.js"));
+					}
+					try (AutoCloseable init1 = Profile.block("Platform-run")) {
+						Platform.run();
+					}
+
+					try (AutoCloseable init1 = Profile.block("onCreateInternal")) {
+						onCreateInternal();
+					}
+				}
 			}
-			catch (NameNotFoundException e)
-			{
-				if (logger.isEnabled()) logger.write("Error while getting current proxy thumb");
-				e.printStackTrace();
-			}
-			ThreadScheduler workThreadScheduler = new WorkThreadScheduler(new Handler(Looper.getMainLooper()));
-			Platform.init(this, workThreadScheduler, logger, appName, null, rootDir, appDir, debuggerSetupDir, classLoader, dexDir, dexThumb);
-			Platform.runScript(new File(appDir, "internal/prepareExtend.js"));
-			Platform.run();
-	
-			onCreateInternal();
+		} catch(Exception e) {
+			Log.e("TNS", "Error running app", e);
 		}
 	}
 	
@@ -823,45 +861,63 @@ public class NativeScriptApplication extends android.app.Application implements 
 	}
 
 	public void onLowMemory() {
-		if (appBuilderCallbackImpl != null)
-		{
-		        appBuilderCallbackImpl.onLowMemory(this);
-		}
-		
-		if ((__ho7 & (1 << 0)) > 0) { 
-			java.lang.Object[] params = null;
-			com.tns.Platform.callJSMethod(this, "onLowMemory", void.class, params);
-		} else {
-			super.onLowMemory();
+		try {
+			try (AutoCloseable c1 = Profile.block("NSApp-onLowMemory")) {
+				if (appBuilderCallbackImpl != null)
+				{
+					appBuilderCallbackImpl.onLowMemory(this);
+				}
+
+				if ((__ho7 & (1 << 0)) > 0) {
+					java.lang.Object[] params = null;
+					com.tns.Platform.callJSMethod(this, "onLowMemory", void.class, params);
+				} else {
+					super.onLowMemory();
+				}
+			}
+		} catch(Exception e) {
+			Log.e("TNS", "Error running app", e);
 		}
 	}
 
 	public void onTerminate() {
-		if (appBuilderCallbackImpl != null)
-		{
-		        appBuilderCallbackImpl.onTerminate(this);
-		}
-		
-		if ((__ho7 & (1 << 1)) > 0) { 
-			java.lang.Object[] params = null;
-			com.tns.Platform.callJSMethod(this, "onTerminate", void.class, params);
-		} else {
-			super.onTerminate();
+		try {
+			try (AutoCloseable c1 = Profile.block("NSApp-onTerminate")) {
+				if (appBuilderCallbackImpl != null)
+				{
+					appBuilderCallbackImpl.onTerminate(this);
+				}
+
+				if ((__ho7 & (1 << 1)) > 0) {
+					java.lang.Object[] params = null;
+					com.tns.Platform.callJSMethod(this, "onTerminate", void.class, params);
+				} else {
+					super.onTerminate();
+				}
+			}
+		} catch(Exception e) {
+			Log.e("TNS", "Error running app", e);
 		}
 	}
 
 	public void onTrimMemory(int param_0) {
-		if (appBuilderCallbackImpl != null)
-		{
-		        appBuilderCallbackImpl.onTrimMemory(this, param_0);
-		}
-		
-		if ((__ho7 & (1 << 2)) > 0) { 
-			java.lang.Object[] params = new Object[1];
-			params[0] = param_0;
-			com.tns.Platform.callJSMethod(this, "onTrimMemory", void.class, params);
-		} else {
-			super.onTrimMemory(param_0);
+		try {
+			try (AutoCloseable c1 = Profile.block("NSApp-onTrimMemory")) {
+				if (appBuilderCallbackImpl != null)
+				{
+					appBuilderCallbackImpl.onTrimMemory(this, param_0);
+				}
+
+				if ((__ho7 & (1 << 2)) > 0) {
+					java.lang.Object[] params = new Object[1];
+					params[0] = param_0;
+					com.tns.Platform.callJSMethod(this, "onTrimMemory", void.class, params);
+				} else {
+					super.onTrimMemory(param_0);
+				}
+			}
+		} catch(Exception e) {
+			Log.e("TNS", "Error running app", e);
 		}
 	}
 
