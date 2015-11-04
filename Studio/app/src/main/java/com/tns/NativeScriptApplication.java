@@ -78,7 +78,7 @@ public class NativeScriptApplication extends android.app.Application implements 
 
 	static {
 		if (BuildConfig.DEBUG) {
-			android.os.Debug.waitForDebugger();
+			//android.os.Debug.waitForDebugger();
 		}
 	}
 	
@@ -751,9 +751,7 @@ public class NativeScriptApplication extends android.app.Application implements 
 			String appName = this.getPackageName();
 			File rootDir = new File(this.getApplicationInfo().dataDir);
 			File appDir = this.getFilesDir();
-			File debuggerSetupDir = Util.isDebuggableApp(this)
-										? getExternalFilesDir(null)
-										: null;
+			File debuggerSetupDir = Util.isDebuggableApp(this) ? getExternalFilesDir(null) : null;
 			ClassLoader classLoader = this.getClassLoader();
 			File dexDir = new File(rootDir, "code_cache/secondary-dexes");
 			String dexThumb = null;
