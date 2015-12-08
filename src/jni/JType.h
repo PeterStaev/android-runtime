@@ -7,22 +7,25 @@ namespace tns
 {
 	enum class Type : int
 	{
-		Boolean,
-		Char,
-		Byte,
-		Short,
-		Int,
-		Long,
-		Float,
-		Double,
-		String,
-		JsObject,
-		Null
+		Boolean				= 0,
+		Char				= 1,
+		Byte				= 2,
+		Short				= 3,
+		Int					= 4,
+		Long				= 5,
+		Float				= 6,
+		Double				= 7,
+		PrimitiveTypeCount	= 8,
+		String				= 8,
+		JsObject			= 9,
+		Null				= 10
 	};
 
 	class JType
 	{
 	public:
+		JType() = delete;
+
 		static jobject NewByte(JEnv env, jbyte value);
 		static jobject NewChar(JEnv env, jchar value);
 		static jobject NewBoolean(JEnv env, jboolean value);
@@ -44,25 +47,24 @@ namespace tns
 		static Type getClassType(int retType);
 
 	private:
-		JType()
+		struct PrimitiveTypeInfo
 		{
-		}
+			PrimitiveTypeInfo()
+				: clazz(nullptr), ctorID(nullptr), fieldID(nullptr)
+			{
+			}
 
-		void Init(JEnv env, Type type);
-		static void EnsureInstance(JEnv env, JType **instance, Type type);
+			jclass clazz;
+			jmethodID ctorID;
+			jfieldID fieldID;
 
-		jclass clazz;
-		jmethodID ctor;
-		jfieldID valueField;
+			template<int typeID>
+			static PrimitiveTypeInfo& GetPrimitiveTypeInfo();
 
-		static JType* Byte;
-		static JType* Char;
-		static JType* Boolean;
-		static JType* Short;
-		static JType* Int;
-		static JType* Long;
-		static JType* Float;
-		static JType* Double;
+		private:
+
+			static PrimitiveTypeInfo s_primitiveTypeCache[static_cast<int>(Type::PrimitiveTypeCount)];
+		};
 	};
 }
 

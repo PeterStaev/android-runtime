@@ -8,167 +8,52 @@ namespace tns
 		return classReturnType;
 	}
 
-	jobject JType::NewByte(JEnv env, jbyte value)
-	{
-		EnsureInstance(env, &Byte, Type::Byte);
-		return env.NewObject(Byte->clazz, Byte->ctor, value);
-	}
+#define DEFINE_GETPRIMITIVETYPEINFO_METHOD(type, typeSig, ctorSig, fieldSig) \
+template<> \
+JType::PrimitiveTypeInfo& JType::PrimitiveTypeInfo::GetPrimitiveTypeInfo<static_cast<int>(type)>() \
+{ \
+	auto& pti = JType::PrimitiveTypeInfo::s_primitiveTypeCache[static_cast<int>(type)]; \
+	if (pti.clazz == nullptr) \
+	{ \
+		JEnv env; \
+		pti.clazz = env.FindClass(typeSig); \
+		pti.ctorID = env.GetMethodID(pti.clazz, "<init>", ctorSig); \
+		pti.fieldID = env.GetFieldID(pti.clazz, "value", fieldSig); \
+	} \
+	return pti; \
+}
 
-	jobject JType::NewChar(JEnv env, jchar value)
-	{
-		EnsureInstance(env, &Char, Type::Char);
-		return env.NewObject(Char->clazz, Char->ctor, value);
-	}
+	DEFINE_GETPRIMITIVETYPEINFO_METHOD(Type::Boolean, "java/lang/Boolean", "(Z)V", "Z")
+	DEFINE_GETPRIMITIVETYPEINFO_METHOD(Type::Char, "java/lang/Character", "(C)V", "C")
+	DEFINE_GETPRIMITIVETYPEINFO_METHOD(Type::Byte, "java/lang/Byte", "(B)V", "B")
+	DEFINE_GETPRIMITIVETYPEINFO_METHOD(Type::Short, "java/lang/Short", "(S)V", "S")
+	DEFINE_GETPRIMITIVETYPEINFO_METHOD(Type::Int, "java/lang/Integer", "(I)V", "I")
+	DEFINE_GETPRIMITIVETYPEINFO_METHOD(Type::Long, "java/lang/Long", "(J)V", "J")
+	DEFINE_GETPRIMITIVETYPEINFO_METHOD(Type::Float, "java/lang/Float", "(F)V", "F")
+	DEFINE_GETPRIMITIVETYPEINFO_METHOD(Type::Double, "java/lang/Double", "(D)V", "D")
 
-	jobject JType::NewBoolean(JEnv env, jboolean value)
-	{
-		EnsureInstance(env, &Boolean, Type::Boolean);
-		return env.NewObject(Boolean->clazz, Boolean->ctor, value);
-	}
 
-	jobject JType::NewShort(JEnv env, jshort value)
-	{
-		EnsureInstance(env, &Short, Type::Short);
-		return env.NewObject(Short->clazz, Short->ctor, value);
-	}
+#define DEFINE_PRIMITIVE_TYPE_HELPER_METHODS(type, jnitype) \
+jobject JType::New##type(JEnv env, jnitype value) \
+{ \
+	auto& pti = JType::PrimitiveTypeInfo::GetPrimitiveTypeInfo<static_cast<int>(Type::type)>(); \
+	return env.NewObject(pti.clazz, pti.ctorID, value); \
+} \
+jnitype JType::type##Value(JEnv env, jobject value) \
+{ \
+	auto& pti = JType::PrimitiveTypeInfo::GetPrimitiveTypeInfo<static_cast<int>(Type::type)>(); \
+	jnitype ret = env.Get##type##Field(value, pti.fieldID); \
+	return ret; \
+}
 
-	jobject JType::NewInt(JEnv env, jint value)
-	{
-		EnsureInstance(env, &Int, Type::Int);
-		return env.NewObject(Int->clazz, Int->ctor, value);
-	}
+	DEFINE_PRIMITIVE_TYPE_HELPER_METHODS(Boolean, jboolean)
+	DEFINE_PRIMITIVE_TYPE_HELPER_METHODS(Char, jchar)
+	DEFINE_PRIMITIVE_TYPE_HELPER_METHODS(Byte, jbyte)
+	DEFINE_PRIMITIVE_TYPE_HELPER_METHODS(Short, jshort)
+	DEFINE_PRIMITIVE_TYPE_HELPER_METHODS(Int, jint)
+	DEFINE_PRIMITIVE_TYPE_HELPER_METHODS(Long, jlong)
+	DEFINE_PRIMITIVE_TYPE_HELPER_METHODS(Float, jfloat)
+	DEFINE_PRIMITIVE_TYPE_HELPER_METHODS(Double, jdouble)
 
-	jobject JType::NewLong(JEnv env, jlong value)
-	{
-		EnsureInstance(env, &Long, Type::Long);
-		return env.NewObject(Long->clazz, Long->ctor, value);
-	}
-
-	jobject JType::NewFloat(JEnv env, jfloat value)
-	{
-		EnsureInstance(env, &Float, Type::Float);
-		return env.NewObject(Float->clazz, Float->ctor, value);
-	}
-
-	jobject JType::NewDouble(JEnv env, jdouble value)
-	{
-		EnsureInstance(env, &Double, Type::Double);
-		return env.NewObject(Double->clazz, Double->ctor, value);
-	}
-
-	jbyte JType::ByteValue(JEnv env, jobject value)
-	{
-		EnsureInstance(env, &Byte, Type::Byte);
-		return env.GetByteField(value, Byte->valueField);
-	}
-
-	jchar JType::CharValue(JEnv env, jobject value)
-	{
-		EnsureInstance(env, &Char, Type::Char);
-		return env.GetCharField(value, Char->valueField);
-	}
-
-	jboolean JType::BooleanValue(JEnv env, jobject value)
-	{
-		EnsureInstance(env, &Boolean, Type::Boolean);
-		return env.GetBooleanField(value, Boolean->valueField);
-	}
-
-	jshort JType::ShortValue(JEnv env, jobject value)
-	{
-		EnsureInstance(env, &Short, Type::Short);
-		return env.GetShortField(value, Short->valueField);
-	}
-
-	jint JType::IntValue(JEnv env, jobject value)
-	{
-		EnsureInstance(env, &Int, Type::Int);
-		return env.GetIntField(value, Int->valueField);
-	}
-
-	jlong JType::LongValue(JEnv env, jobject value)
-	{
-		EnsureInstance(env, &Long, Type::Long);
-		return env.GetLongField(value, Long->valueField);
-	}
-
-	jfloat JType::FloatValue(JEnv env, jobject value)
-	{
-		EnsureInstance(env, &Float, Type::Float);
-		return env.GetFloatField(value, Float->valueField);
-	}
-
-	jdouble JType::DoubleValue(JEnv env, jobject value)
-	{
-		EnsureInstance(env, &Double, Type::Double);
-		return env.GetDoubleField(value, Double->valueField);
-	}
-
-	void JType::EnsureInstance(JEnv env, JType **instance, Type type)
-	{
-		if((*instance) != nullptr)
-		{
-			return;
-		}
-
-		*instance = new JType();
-		(*instance)->Init(env, type);
-	}
-
-	void JType::Init(JEnv env, Type type)
-	{
-		// TODO: Provide a fallback mechanism to prevent possible field name changes
-		switch(type)
-		{
-			case Type::Byte:
-				this->clazz = env.FindClass("java/lang/Byte");
-				this->ctor = env.GetMethodID(this->clazz, "<init>", "(B)V");
-				this->valueField = env.GetFieldID(this->clazz, "value", "B");
-				break;
-			case Type::Char:
-				this->clazz = env.FindClass("java/lang/Character");
-				this->ctor = env.GetMethodID(this->clazz, "<init>", "(C)V");
-				this->valueField = env.GetFieldID(this->clazz, "value", "C");
-				break;
-			case Type::Boolean:
-				this->clazz = env.FindClass("java/lang/Boolean");
-				this->ctor = env.GetMethodID(this->clazz, "<init>", "(Z)V");
-				this->valueField = env.GetFieldID(this->clazz, "value", "Z");
-				break;
-			case Type::Short:
-				this->clazz = env.FindClass("java/lang/Short");
-				this->ctor = env.GetMethodID(this->clazz, "<init>", "(S)V");
-				this->valueField = env.GetFieldID(this->clazz, "value", "S");
-				break;
-			case Type::Int:
-				this->clazz = env.FindClass("java/lang/Integer");
-				this->ctor = env.GetMethodID(this->clazz, "<init>", "(I)V");
-				this->valueField = env.GetFieldID(this->clazz, "value", "I");
-				break;
-			case Type::Long:
-				this->clazz = env.FindClass("java/lang/Long");
-				this->ctor = env.GetMethodID(this->clazz, "<init>", "(J)V");
-				this->valueField = env.GetFieldID(this->clazz, "value", "J");
-				break;
-			case Type::Float:
-				this->clazz = env.FindClass("java/lang/Float");
-				this->ctor = env.GetMethodID(this->clazz, "<init>", "(F)V");
-				this->valueField = env.GetFieldID(this->clazz, "value", "F");
-				break;
-			case Type::Double:
-				this->clazz = env.FindClass("java/lang/Double");
-				this->ctor = env.GetMethodID(this->clazz, "<init>", "(D)V");
-				this->valueField = env.GetFieldID(this->clazz, "value", "D");
-				break;
-		}
-	}
-
-	JType* JType::Byte;
-	JType* JType::Char;
-	JType* JType::Boolean;
-	JType* JType::Short;
-	JType* JType::Int;
-	JType* JType::Long;
-	JType* JType::Float;
-	JType* JType::Double;
+	JType::PrimitiveTypeInfo JType::PrimitiveTypeInfo::s_primitiveTypeCache[static_cast<int>(Type::PrimitiveTypeCount)];
 }
